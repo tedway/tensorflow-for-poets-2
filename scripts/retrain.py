@@ -840,6 +840,43 @@ def prepare_file_system():
   return
 
 
+# Microsoft Modified
+def create_mobilenet_info_for_vaidk():
+    """Returns model information about the mobilenet model supported for the VAIDK
+    
+    Returns:
+        Dictionary of information about the model
+    """
+    data_url = 'https://github.com/rakelkar/models/blob/master/model_output/imagenet_2_frozen.tgz'
+    model_file_name = "imagenet_2_frozen.pb"
+
+    size_string = '224'
+    version_string = '1.0'
+    is_quantized = False
+    bottleneck_tensor_name = 'MobilenetV1/Predictions/Reshape:0'
+    bottleneck_tensor_size = 1001
+    input_width = int(size_string)
+    input_height = int(size_string)
+    input_depth = 3
+    resized_input_tensor_name = 'input:0'
+    model_base_name = 'frozen_graph.pb'
+    input_mean = 127.5
+    input_std = 127.5
+    
+
+    return {
+        'data_url': data_url,
+        'bottleneck_tensor_name': bottleneck_tensor_name,
+        'bottleneck_tensor_size': bottleneck_tensor_size,
+        'input_width': input_width,
+        'input_height': input_height,
+        'input_depth': input_depth,
+        'resized_input_tensor_name': resized_input_tensor_name,
+        'model_file_name': model_file_name,
+        'input_mean': input_mean,
+        'input_std': input_std,
+    }
+
 def create_model_info(architecture):
   """Given the name of a model architecture, returns information about it.
 
@@ -973,7 +1010,10 @@ def main(_):
   prepare_file_system()
 
   # Gather information about the model architecture we'll be using.
-  model_info = create_model_info(FLAGS.architecture)
+  # Microsoft Modified
+  #model_info = create_model_info(FLAGS.architecture)
+  model_info = create_mobilenet_info_for_vaidk()
+
   if not model_info:
     tf.logging.error('Did not recognize architecture flag')
     return -1
@@ -1124,6 +1164,10 @@ def main(_):
                    ground_truth_input: test_ground_truth})
     tf.logging.info('Final test accuracy = %.1f%% (N=%d)' %
                     (test_accuracy * 100, len(test_bottlenecks)))
+    
+    # Microsoft Modified
+    '''ADDED FOR AZURE ML'''
+    run.log('Final_test_accuracy', (test_accuracy * 100, len(test_bottlenecks)))
 
     if FLAGS.print_misclassified_test_images:
       tf.logging.info('=== MISCLASSIFIED TEST IMAGES ===')
